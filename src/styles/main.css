@@ -1,0 +1,774 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --leaf-50: #f0fdf4;
+    --leaf-500: #22c55e;
+    --leaf-600: #1a9d53;
+    --bark-300: #432b1a;
+    --bark-600: #432b1a;
+    --bark-700: #2c1810;
+    --bark-800: #1f1209;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Quicksand', sans-serif;
+    background-color: var(--leaf-50);
+    color: var(--bark-700);
+    line-height: 1.6;
+}
+
+.toolbar {
+    background-color: var(--bark-800);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+.board-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+button, select, input[type="text"], input[type="number"] {
+    background-color: var(--leaf-500);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.board {
+    position: relative;
+    min-height: calc(100vh - 100px);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.draggable {
+    position: absolute;
+    cursor: move;
+    user-select: none;
+}
+
+.widget {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 250px;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--leaf-500);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.widget-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.widget-controls button {
+    background: none;
+    color: var(--bark-700);
+    padding: 0;
+    font-size: 1rem;
+}
+
+.widget-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--leaf-50);
+    border-radius: 4px;
+}
+
+.widget-settings.hidden {
+    display: none;
+}
+
+.widget-settings label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timer-display, .clock-display, .sound-level-display, .dice-result, .selected-student {
+    font-size: 2rem;
+    text-align: center;
+    color: var(--bark-700);
+}
+
+.timer-controls, .dice-controls {
+    display: flex;
+    justify-content: space-between;
+}
+
+textarea, input[type="text"], input[type="number"], input[type="color"] {
+    width: 100%;
+    border: 1px solid var(--leaf-500);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.qr-preview {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.poll-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rolling {
+    animation: shake 0.5s;
+}
+
+.embedded-video {
+    max-width: 100%;
+    margin-top: 0.5rem;
+}
+
+.ring-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.timer-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid var(--leaf-500);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+}
+
+.timer-ring:nth-child(1) {
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.timer-ring:nth-child(2) {
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.timer-ring:nth-child(3) {
+    border-color: rgba(34, 197, 94, 0.1);
+}
+
+@keyframes dice-roll {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-15deg); }
+    75% { transform: rotate(15deg); }
+}
+
+/* Sound Ripple Animation */
+.sound-ripple-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+}
+
+.sound-ripple {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--leaf-500);
+    border-radius: 50%;
+    opacity: 0;
+    animation: ripple 1.5s linear infinite;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+/* Dice Rolling Animation */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Rock Slide Warning */
+.rock-slide-warning {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.sundial-clock .clock-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+}
+
+.sundial-clock .analog-clock {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 4px solid var(--bark-300);
+    background-color: var(--leaf-50);
+    margin: 0 auto;
+}
+
+.sundial-clock .hour-markers {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.sundial-clock .hour-markers::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 10px;
+    background-color: var(--bark-500);
+    transform-origin: 50% 100px;
+}
+
+.sundial-clock .clock-hands {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.sundial-clock .hour-hand,
+.sundial-clock .minute-hand,
+.sundial-clock .second-hand {
+    position: absolute;
+    bottom: 50%;
+    left: calc(50% - 1px);
+    transform-origin: bottom center;
+    background-color: var(--bark-700);
+    border-radius: 4px;
+}
+
+.sundial-clock .hour-hand {
+    width: 2px;
+    height: 60px;
+    background-color: var(--bark-700);
+}
+
+.sundial-clock .minute-hand {
+    width: 2px;
+    height: 80px;
+    background-color: var(--bark-600);
+}
+
+.sundial-clock .second-hand {
+    width: 1px;
+    height: 90px;
+    background-color: var(--leaf-500);
+}
+
+.sundial-clock .center-dot {
+    position: absolute;
+    top: calc(50% - 6px);
+    left: calc(50% - 6px);
+    width: 12px;
+    height: 12px;
+    background-color: var(--bark-800);
+    border-radius: 50%;
+}
+
+.sundial-clock .digital-display {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 10px;
+    color: var(--bark-700);
+}
+
+.sundial-clock .format-toggle-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.sundial-clock .format-toggle {
+    background-color: var(--leaf-500);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.sundial-clock .format-toggle:hover {
+    background-color: var(--leaf-600);
+}
+
+.sundial-clock .format-toggle {
+    margin-top: 10px;
+    background-color: #90EE90;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+}
+
+.sundial-clock .format-toggle:hover {
+    background-color: #7CCD7C;
+}
+
+@media (max-width: 600px) {
+    .sundial-clock canvas {
+        max-width: 250px;
+        max-height: 250px;
+    }
+}
+
+.rockslide-meter .sound-level-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background-color: var(--leaf-50);
+    border-radius: 8px;
+}
+
+.rockslide-meter .sound-meter {
+    width: 100%;
+    height: 30px;
+    background-color: var(--bark-100);
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+}
+
+.rockslide-meter .sound-level-bar {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(to right, var(--leaf-500), var(--bark-700));
+    transition: width 0.3s ease;
+}
+
+.rockslide-meter .sound-level-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bark-800);
+    font-weight: bold;
+}
+
+.rockslide-meter .rockslide-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: transparent;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.rockslide-meter .rockslide-warning.active {
+    background-color: rgba(255, 0, 0, 0.1);
+    opacity: 1;
+}
+
+.rockslide-meter .warning-icon {
+    font-size: 24px;
+    color: var(--bark-700);
+}
+
+.rockslide-meter .warning-text {
+    color: var(--bark-800);
+    font-weight: bold;
+}
+
+.rockslide-meter .sound-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.rockslide-meter .threshold-control {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.rockslide-meter .threshold-control label {
+    color: var(--bark-700);
+}
+
+.rockslide-meter .threshold-control input[type="range"] {
+    width: 100%;
+    accent-color: var(--leaf-500);
+}
+
+.rockslide-meter .threshold-control .threshold-value {
+    text-align: center;
+    color: var(--bark-600);
+    font-weight: bold;
+}
+
+.rockslide-meter .monitoring-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.rockslide-meter .monitoring-controls button {
+    flex-grow: 1;
+    padding: 10px;
+    background-color: var(--leaf-500);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.rockslide-meter .monitoring-controls button:hover {
+    background-color: var(--leaf-600);
+}
+
+.rockslide-meter .monitoring-controls .stop-monitoring-btn {
+    background-color: var(--bark-300);
+}
+
+.rockslide-meter .monitoring-controls .stop-monitoring-btn:hover {
+    background-color: var(--bark-500);
+}
+
+.bark-text .bark-text-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+    background-color: var(--leaf-50);
+    border-radius: 8px;
+}
+
+.bark-text .text-styling-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--bark-100);
+    padding: 8px;
+    border-radius: 5px;
+}
+
+.bark-text .style-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px;
+    font-weight: bold;
+    border-radius: 3px;
+    transition: background-color 0.3s ease;
+}
+
+.bark-text .style-btn[data-style="bold"] { font-weight: bold; }
+.bark-text .style-btn[data-style="italic"] { font-style: italic; }
+.bark-text .style-btn[data-style="underline"] { text-decoration: underline; }
+
+.bark-text .style-btn:hover {
+    background-color: var(--leaf-100);
+}
+
+.bark-text .heading-select {
+    background-color: white;
+    border: 1px solid var(--bark-300);
+    border-radius: 3px;
+    padding: 5px;
+}
+
+.bark-text .text-color-picker {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.bark-text .list-controls {
+    display: flex;
+    gap: 10px;
+    background-color: var(--bark-100);
+    padding: 8px;
+    border-radius: 5px;
+}
+
+.bark-text .list-btn {
+    background-color: var(--leaf-500);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.bark-text .list-btn:hover {
+    background-color: var(--leaf-600);
+}
+
+.bark-text .text-editor {
+    background-color: white;
+    border: 1px solid var(--bark-300);
+    border-radius: 5px;
+    min-height: 200px;
+    padding: 10px;
+}
+
+.bark-text .editor-content {
+    outline: none;
+    min-height: 180px;
+}
+
+.bark-text .editor-content:empty:before {
+    content: attr(placeholder);
+    color: var(--bark-400);
+    pointer-events: none;
+}
+
+.bark-text .editor-content ol {
+    padding-left: 30px;
+}
+
+.bark-text .editor-content ul {
+    padding-left: 30px;
+    list-style-type: disc;
+}
+
+.bark-text .todo-list-container {
+    background-color: var(--bark-50);
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.bark-text .todo-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.bark-text .todo-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+    background-color: white;
+    padding: 8px;
+    border-radius: 3px;
+}
+
+.bark-text .todo-list li.completed {
+    text-decoration: line-through;
+    color: var(--bark-400);
+}
+
+.bark-text .todo-list li button {
+    background-color: transparent;
+    border: none;
+    color: var(--bark-700);
+    cursor: pointer;
+}
+
+.bark-text .add-todo-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.bark-text .todo-input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid var(--bark-300);
+    border-radius: 3px;
+}
+
+.bark-text .add-todo-btn {
+    background-color: var(--leaf-500);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.bark-text .add-todo-btn:hover {
+    background-color: var(--leaf-600);
+}
+
+.bark-note {
+    background-color: var(--leaf-50);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+    padding: 15px;
+}
+
+.bark-note .note-content {
+    margin-top: 10px;
+    background-color: white;
+    border-radius: 5px;
+    padding: 10px;
+    min-height: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.bark-text .add-note-btn {
+    background-color: var(--bark-700);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.bark-text .add-note-btn:hover {
+    background-color: var(--bark-600);
+}
+
+.bark-text .emoji-picker-container {
+    position: relative;
+}
+
+.bark-text .emoji-picker-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.bark-text .emoji-picker-btn:hover {
+    transform: scale(1.2);
+}
+
+.bark-text .emoji-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    background-color: white;
+    border: 1px solid var(--bark-300);
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 250px;
+    padding: 10px;
+}
+
+.bark-text .emoji-categories {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--bark-100);
+    padding-bottom: 10px;
+}
+
+.bark-text .emoji-categories button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.bark-text .emoji-categories button:hover {
+    transform: scale(1.2);
+}
+
+.bark-text .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.bark-text .emoji-grid button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.bark-text .emoji-grid button:hover {
+    background-color: var(--leaf-100);
+    transform: scale(1.2);
+}
+
+.bark-text .color-picker-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.bark-text .color-picker-btn:hover {
+    transform: scale(1.2);
+}
