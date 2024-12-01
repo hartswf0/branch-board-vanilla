@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Branch Board - Nature-Inspired Digital Classroom</title>
+    <link rel="icon" type="image/svg+xml" href="/leaf.svg">
+    <link rel="stylesheet" href="/src/styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="toolbar">
+            <h1>Branch Board</h1>
+            <div class="board-controls">
+                <button id="create-board-btn">Create Board</button>
+                <input type="text" id="board-background-url" placeholder="Enter background image URL">
+                <button id="set-background-btn">Set Background</button>
+                <select id="widget-selector">
+                    <option value="">Add Widget</option>
+                    <option value="tree-ring-timer">Tree Ring Timer</option>
+                    <option value="sundial-clock">Sundial Clock</option>
+                    <option value="bark-text">Bark Text</option>
+                    <option value="rockslide-meter">RockSlide Sound Meter</option>
+                    <option value="leaf-qr">Leaf QR Generator</option>
+                    <option value="branchout-picker">BranchOut Name Picker</option>
+                    <option value="pinecone-dice">Pinecone Dice Roller</option>
+                    <option value="leafpoll">LeafPoll Creator</option>
+                    <option value="nest-embed">Nest Embed (YouTube)</option>
+                </select>
+            </div>
+        </header>
+        
+        <main id="board" class="board">
+            <!-- Widgets will be dynamically added here -->
+        </main>
+    </div>
+
+    <!-- Existing Widget Templates -->
+    <template id="tree-ring-timer-template">
+        <div class="widget tree-ring-timer draggable">
+            <div class="widget-header">
+                <h3>Tree Ring Timer</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <div class="ring-container"></div>
+            <div class="timer-display">00:00</div>
+            <div class="timer-controls">
+                <input type="number" class="timer-duration" placeholder="Enter minutes" min="1" max="120">
+                <button class="start-btn">Start</button>
+                <button class="reset-btn">Reset</button>
+            </div>
+            <div class="widget-settings hidden">
+                <label>Timer Theme:
+                    <select class="timer-theme">
+                        <option value="calm">Calm</option>
+                        <option value="focus">Focus</option>
+                        <option value="energetic">Energetic</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+    </template>
+
+    <template id="sundial-clock-template">
+        <div class="widget sundial-clock draggable">
+            <div class="widget-header">
+                <h3>Sundial Clock</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <div class="clock-container">
+                <div class="analog-clock">
+                    <div class="hour-markers"></div>
+                    <div class="clock-hands">
+                        <div class="hour-hand"></div>
+                        <div class="minute-hand"></div>
+                        <div class="second-hand"></div>
+                        <div class="center-dot"></div>
+                    </div>
+                </div>
+                <div class="digital-display">00:00:00</div>
+                <div class="format-toggle-container">
+                    <button class="format-toggle">12/24 Hour</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="bark-text-template">
+        <div class="widget bark-text draggable">
+            <div class="widget-header">
+                <h3>Bark Text Editor</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <div class="bark-text-container">
+                <div class="text-styling-toolbar">
+                    <button class="style-btn" data-style="bold">B</button>
+                    <button class="style-btn" data-style="italic">I</button>
+                    <button class="style-btn" data-style="underline">U</button>
+                    <select class="heading-select">
+                        <option value="">Normal Text</option>
+                        <option value="h1">Heading 1</option>
+                        <option value="h2">Heading 2</option>
+                        <option value="h3">Heading 3</option>
+                    </select>
+                    <input type="color" class="text-color-picker" value="#2c1810" style="display: none;">
+                    <button class="color-picker-btn">🎨</button>
+                    <div class="emoji-picker-container">
+                        <button class="emoji-picker-btn">😀</button>
+                        <div class="emoji-dropdown" style="display: none;">
+                            <div class="emoji-categories">
+                                <button data-category="smileys">😀</button>
+                                <button data-category="animals">🐶</button>
+                                <button data-category="nature">🌿</button>
+                                <button data-category="food">🍎</button>
+                            </div>
+                            <div class="emoji-grid"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="list-controls">
+                    <button class="list-btn" data-list="ul">Unordered List</button>
+                    <button class="list-btn" data-list="ol">Ordered List</button>
+                    <button class="list-btn" data-list="todo">Todo List</button>
+                </div>
+                <div class="text-editor">
+                    <div class="editor-content" contenteditable="true" placeholder="Start typing your bark text..."></div>
+                </div>
+                <div class="todo-list-container" style="display: none;">
+                    <h4>Todo List</h4>
+                    <ul class="todo-list"></ul>
+                    <div class="add-todo-container">
+                        <input type="text" class="todo-input" placeholder="Add a new task">
+                        <button class="add-todo-btn">Add Task</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="rockslide-meter-template">
+        <div class="widget rockslide-meter draggable">
+            <div class="widget-header">
+                <h3>Rockslide Sound Meter</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <div class="rockslide-container">
+                <div class="sound-level-display">
+                    <div class="sound-meter">
+                        <div class="sound-level-bar"></div>
+                        <div class="sound-level-indicator">0 dB</div>
+                    </div>
+                    <div class="rockslide-warning">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-text">Rockslide Risk</div>
+                    </div>
+                </div>
+                <div class="sound-controls">
+                    <div class="threshold-control">
+                        <label for="decibel-threshold">Rockslide Threshold:</label>
+                        <input type="range" id="decibel-threshold" min="0" max="120" value="80">
+                        <span class="threshold-value">80 dB</span>
+                    </div>
+                    <div class="monitoring-controls">
+                        <button class="start-monitoring-btn">Start Monitoring</button>
+                        <button class="stop-monitoring-btn">Stop Monitoring</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="leaf-qr-template">
+        <div class="widget leaf-qr draggable">
+            <div class="widget-header">
+                <h3>Leaf QR Generator</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <input type="text" class="qr-input" placeholder="Enter URL or text">
+            <div class="qr-preview"></div>
+            <button class="generate-qr-btn">Generate QR</button>
+            <div class="widget-settings hidden">
+                <label>QR Size:
+                    <input type="number" class="qr-size" min="100" max="500" value="200">
+                </label>
+                <label>QR Color:
+                    <input type="color" class="qr-color" value="#000000">
+                </label>
+            </div>
+        </div>
+    </template>
+
+    <template id="branchout-picker-template">
+        <div class="widget branchout-picker draggable">
+            <div class="widget-header">
+                <h3>BranchOut Name Picker</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <textarea class="student-list" placeholder="Enter student names (one per line)"></textarea>
+            <div class="selected-student"></div>
+            <button class="pick-student-btn">Pick Student</button>
+            <div class="widget-settings hidden">
+                <label>Picker Mode:
+                    <select class="picker-mode">
+                        <option value="random">Random</option>
+                        <option value="sequential">Sequential</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+    </template>
+
+    <template id="pinecone-dice-template">
+        <div class="widget pinecone-dice draggable">
+            <div class="widget-header">
+                <h3>Pinecone Dice Roller</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <div class="dice-result">Roll the dice!</div>
+            <div class="dice-controls">
+                <select class="dice-type">
+                    <option value="6">6-sided</option>
+                    <option value="20">20-sided</option>
+                    <option value="100">100-sided</option>
+                </select>
+                <button class="roll-dice-btn">Roll</button>
+            </div>
+            <div class="widget-settings hidden">
+                <label>Dice Color:
+                    <input type="color" class="dice-color" value="#000000">
+                </label>
+            </div>
+        </div>
+    </template>
+
+    <template id="leafpoll-template">
+        <div class="widget leafpoll draggable">
+            <div class="widget-header">
+                <h3>LeafPoll Creator</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <input type="text" class="poll-question" placeholder="Enter poll question">
+            <div class="poll-options">
+                <input type="text" class="poll-option" placeholder="Option 1">
+                <input type="text" class="poll-option" placeholder="Option 2">
+            </div>
+            <button class="add-option-btn">+ Add Option</button>
+            <button class="create-poll-btn">Create Poll</button>
+            <div class="widget-settings hidden">
+                <label>Poll Type:
+                    <select class="poll-type">
+                        <option value="multiple-choice">Multiple Choice</option>
+                        <option value="open-ended">Open-Ended</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+    </template>
+
+    <template id="nest-embed-template">
+        <div class="widget nest-embed draggable">
+            <div class="widget-header">
+                <h3>Nest Embed</h3>
+                <div class="widget-controls">
+                    <button class="widget-settings-btn">⚙️</button>
+                    <button class="widget-close-btn">✖️</button>
+                </div>
+            </div>
+            <div class="embed-container">
+                <input type="text" class="youtube-url" placeholder="Enter YouTube URL">
+                <button class="embed-video-btn">Embed Video</button>
+                <iframe class="embedded-video" width="100%" height="200" src="" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </template>
+
+    <script type="module" src="/src/scripts/main.js"></script>
+    <script type="module" src="/src/scripts/drag-manager.js"></script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>
