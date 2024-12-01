@@ -4,10 +4,10 @@ class BranchBoard {
     constructor() {
         this.board = document.getElementById('board');
         this.widgetSelector = document.getElementById('widget-selector');
-        this.createBoardBtn = document.getElementById('create-board-btn');
-
+        
         this.initializeEventListeners();
         this.dragManager = new DragManager();
+        this.initializePaintOverlay();
     }
 
     initializeEventListeners() {
@@ -18,14 +18,40 @@ class BranchBoard {
         const widgetType = this.widgetSelector.value;
         if (!widgetType) return;
 
+        // Special case for paint overlay
+        if (widgetType === 'leaf-paint') {
+            console.log('Attempting to open paint overlay');
+            const paintOverlay = document.getElementById('paint-overlay');
+            if (!paintOverlay) {
+                console.error('Paint overlay element not found');
+                return;
+            }
+            
+            console.log('Paint overlay element found:', paintOverlay);
+            paintOverlay.classList.add('active');
+            console.log('Active class added to paint overlay');
+            
+            this.widgetSelector.value = '';
+            return;
+        }
+
         const templateId = `${widgetType}-template`;
         const template = document.getElementById(templateId);
         
-        if (template) {
-            const widgetClone = template.content.cloneNode(true);
-            const widget = widgetClone.querySelector('.widget');
-            
-            // Add specific initialization for each widget type
+        if (!template) {
+            console.error(`No template found for widget type: ${widgetType}`);
+            return;
+        }
+
+        // Clone the template content
+        const widgetClone = template.content.cloneNode(true);
+        const widget = widgetClone.querySelector('.widget');
+        
+        // Ensure widget has a unique ID
+        widget.id = `widget-${widgetType}-${Date.now()}`;
+        
+        // Initialize widget based on type
+        try {
             switch(widgetType) {
                 case 'tree-ring-timer':
                     this.initializeTreeRingTimer(widget);
@@ -48,10 +74,26 @@ class BranchBoard {
                 case 'bark-text':
                     this.initializeBarkText(widget);
                     break;
+                case 'leaf-poll':
+                    this.initializeLeafPoll(widget);
+                    break;
+                case 'nest-embed':
+                    this.initializeNestEmbed(widget);
+                    break;
+                default:
+                    console.warn(`No initialization method for widget type: ${widgetType}`);
             }
-
+            
+            // Make widget draggable
+            this.makeDraggable(widget);
+            
+            // Append to board
             this.board.appendChild(widget);
-            this.widgetSelector.value = ''; // Reset selector
+            
+            // Reset widget selector
+            this.widgetSelector.value = '';
+        } catch (error) {
+            console.error(`Error initializing ${widgetType} widget:`, error);
         }
     }
 
@@ -614,6 +656,323 @@ class BranchBoard {
             todoList.innerHTML = '';
             todoListContainer.style.display = 'none';
         });
+    }
+
+    initializeLeafPoll(widget) {
+        const questionInput = widget.querySelector('.poll-question');
+        const optionsContainer = widget.querySelector('.poll-options');
+        const addOptionBtn = widget.querySelector('.add-option-btn');
+        const createPollBtn = widget.querySelector('.create-poll-btn');
+        const closeBtn = widget.querySelector('.widget-close-btn');
+        
+        // Add option functionality
+        addOptionBtn.addEventListener('click', () => {
+            const newOptionInput = document.createElement('input');
+            newOptionInput.type = 'text';
+            newOptionInput.classList.add('poll-option');
+            newOptionInput.placeholder = `Option ${optionsContainer.children.length + 1}`;
+            optionsContainer.appendChild(newOptionInput);
+        });
+        
+        // Create poll functionality
+        createPollBtn.addEventListener('click', () => {
+            const question = questionInput.value.trim();
+            const options = Array.from(optionsContainer.querySelectorAll('.poll-option'))
+                .map(input => input.value.trim())
+                .filter(option => option !== '');
+            
+            if (!question || options.length < 2) {
+                alert('Please enter a question and at least two options');
+                return;
+            }
+            
+            // Generate a simple QR code
+            const pollId = `poll-${Date.now()}`;
+            const pollUrl = `https://branchboard.com/poll/${pollId}`;
+            
+            // Create QR Code
+            const qrContainer = document.createElement('div');
+            qrContainer.classList.add('poll-qr-container');
+            
+            try {
+                const qr = qrcode(0, 'M');
+                qr.addData(pollUrl);
+                qr.make();
+                
+                qrContainer.innerHTML = `
+                    <div class="poll-qr-code">
+                        ${qr.createImgTag(5)}
+                        <p>Scan to participate</p>
+                        <small>Poll ID: ${pollId}</small>
+                    </div>
+                `;
+                
+                // Replace options with QR code and results
+                optionsContainer.innerHTML = '';
+                optionsContainer.appendChild(qrContainer);
+                
+                // Copy poll details to clipboard
+                navigator.clipboard.writeText(`
+Poll Question: ${question}
+Participation Link: ${pollUrl}
+Poll ID: ${pollId}
+                `).then(() => {
+                    alert('Poll details copied to clipboard!');
+                });
+            } catch (error) {
+                console.error('QR Code generation failed:', error);
+                alert('Failed to generate QR code. Please try again.');
+            }
+        });
+        
+        // Close button
+        closeBtn.addEventListener('click', () => {
+            this.board.removeChild(widget);
+        });
+    }
+
+    initializeNestEmbed(widget) {
+        const youtubeUrlInput = widget.querySelector('.youtube-url');
+        const embedVideoBtn = widget.querySelector('.embed-video-btn');
+        const embedFrame = widget.querySelector('.embedded-video');
+        const closeBtn = widget.querySelector('.widget-close-btn');
+        
+        // Embed video functionality
+        embedVideoBtn.addEventListener('click', () => {
+            const youtubeUrl = youtubeUrlInput.value.trim();
+            if (!youtubeUrl) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+            
+            // Comprehensive YouTube URL parsing
+            const youtubePatterns = [
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/,
+                /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([^?]+)/,
+                /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([^?]+)/
+            ];
+            
+            let videoId = null;
+            for (const pattern of youtubePatterns) {
+                const match = youtubeUrl.match(pattern);
+                if (match && match[1]) {
+                    videoId = match[1];
+                    break;
+                }
+            }
+            
+            if (videoId) {
+                // Construct clean embed URL
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&modestbranding=1&rel=0`;
+                embedFrame.src = embedUrl;
+                embedFrame.style.display = 'block';
+                
+                // Generate QR code for video link
+                try {
+                    const qrContainer = document.createElement('div');
+                    qrContainer.classList.add('video-qr-container');
+                    
+                    const qr = qrcode(0, 'M');
+                    qr.addData(youtubeUrl);
+                    qr.make();
+                    
+                    qrContainer.innerHTML = `
+                        <div class="video-qr-code">
+                            ${qr.createImgTag(5)}
+                            <small>Scan to view video</small>
+                        </div>
+                    `;
+                    
+                    // Add QR code next to iframe
+                    widget.querySelector('.embed-container').appendChild(qrContainer);
+                } catch (error) {
+                    console.error('QR Code generation failed:', error);
+                }
+            } else {
+                alert('Invalid YouTube URL. Please enter a valid YouTube video link.');
+                embedFrame.style.display = 'none';
+            }
+        });
+        
+        // Close button
+        closeBtn.addEventListener('click', () => {
+            this.board.removeChild(widget);
+        });
+    }
+
+    initializeLeafPaint(widget) {
+        const canvas = widget.querySelector('.paint-canvas');
+        const colorPicker = widget.querySelector('.color-picker');
+        const brushSizeInput = widget.querySelector('.brush-size');
+        const clearCanvasBtn = widget.querySelector('.clear-canvas-btn');
+        const closeBtn = widget.querySelector('.widget-close-btn');
+        const dragToggleBtn = widget.querySelector('.drag-toggle-btn');
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Initial canvas setup
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = brushSizeInput.value;
+        ctx.lineCap = 'round';
+        
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let isDraggable = false;
+        
+        // Drawing functions
+        function startDrawing(e) {
+            if (isDraggable) return;
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+        
+        function draw(e) {
+            if (isDraggable || !isDrawing) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+        
+        // Event Listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseout', () => isDrawing = false);
+        
+        // Color Picker
+        colorPicker.addEventListener('change', () => {
+            ctx.strokeStyle = colorPicker.value;
+        });
+        
+        // Brush Size
+        brushSizeInput.addEventListener('input', () => {
+            ctx.lineWidth = brushSizeInput.value;
+        });
+        
+        // Clear Canvas
+        clearCanvasBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+        
+        // Drag Toggle
+        dragToggleBtn.addEventListener('click', () => {
+            isDraggable = !isDraggable;
+            
+            if (isDraggable) {
+                // Enable dragging
+                widget.setAttribute('draggable', 'true');
+                dragToggleBtn.classList.add('draggable');
+                dragToggleBtn.textContent = '🔓';
+                
+                // Disable drawing
+                canvas.style.pointerEvents = 'none';
+            } else {
+                // Disable dragging
+                widget.removeAttribute('draggable');
+                dragToggleBtn.classList.remove('draggable');
+                dragToggleBtn.textContent = '🔒';
+                
+                // Enable drawing
+                canvas.style.pointerEvents = 'auto';
+            }
+        });
+        
+        // Close Button
+        closeBtn.addEventListener('click', () => {
+            this.board.removeChild(widget);
+        });
+    }
+
+    initializePaintOverlay() {
+        console.log('Initializing paint overlay');
+        const paintOverlay = document.getElementById('paint-overlay');
+        if (!paintOverlay) {
+            console.error('Paint overlay element not found in DOM');
+            return;
+        }
+        
+        const canvas = document.getElementById('full-paint-canvas');
+        if (!canvas) {
+            console.error('Paint canvas element not found in DOM');
+            return;
+        }
+        
+        const colorPicker = document.getElementById('paint-color-picker');
+        const brushSizeInput = document.getElementById('paint-brush-size');
+        const clearBtn = document.getElementById('clear-paint-btn');
+        const closeBtn = document.getElementById('close-paint-btn');
+        
+        // Set canvas to full window size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Initial canvas setup
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = brushSizeInput.value;
+        ctx.lineCap = 'round';
+        
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        // Drawing functions
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = [e.clientX, e.clientY];
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.clientX, e.clientY);
+            ctx.stroke();
+            
+            [lastX, lastY] = [e.clientX, e.clientY];
+        }
+        
+        // Event Listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseout', () => isDrawing = false);
+        
+        // Color Picker
+        colorPicker.addEventListener('change', () => {
+            ctx.strokeStyle = colorPicker.value;
+        });
+        
+        // Brush Size
+        brushSizeInput.addEventListener('input', () => {
+            ctx.lineWidth = brushSizeInput.value;
+        });
+        
+        // Clear Canvas
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+        
+        // Close Paint Overlay
+        closeBtn.addEventListener('click', () => {
+            console.log('Closing paint overlay');
+            paintOverlay.classList.remove('active');
+        });
+        
+        // Resize canvas when window is resized
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        console.log('Paint overlay initialization complete');
     }
 
     makeDraggable(element) {

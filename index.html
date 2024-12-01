@@ -13,20 +13,20 @@
         <header class="toolbar">
             <h1>Branch Board</h1>
             <div class="board-controls">
-                <button id="create-board-btn">Create Board</button>
                 <input type="text" id="board-background-url" placeholder="Enter background image URL">
                 <button id="set-background-btn">Set Background</button>
                 <select id="widget-selector">
-                    <option value="">Add Widget</option>
+                    <option value="">Select a Widget</option>
                     <option value="tree-ring-timer">Tree Ring Timer</option>
                     <option value="sundial-clock">Sundial Clock</option>
-                    <option value="bark-text">Bark Text</option>
                     <option value="rockslide-meter">RockSlide Sound Meter</option>
+                    <option value="bark-text">Bark Text Editor</option>
                     <option value="leaf-qr">Leaf QR Generator</option>
                     <option value="branchout-picker">BranchOut Name Picker</option>
                     <option value="pinecone-dice">Pinecone Dice Roller</option>
                     <option value="leafpoll">LeafPoll Creator</option>
                     <option value="nest-embed">Nest Embed (YouTube)</option>
+                    <option value="leaf-paint">Leaf Paint</option>
                 </select>
             </div>
         </header>
@@ -254,6 +254,8 @@
         </div>
     </template>
 
+    <!-- Commented out LeafPoll Template -->
+    <!--
     <template id="leafpoll-template">
         <div class="widget leafpoll draggable">
             <div class="widget-header">
@@ -280,6 +282,7 @@
             </div>
         </div>
     </template>
+    -->
 
     <template id="nest-embed-template">
         <div class="widget nest-embed draggable">
@@ -297,6 +300,16 @@
             </div>
         </div>
     </template>
+
+    <div id="paint-overlay" class="paint-overlay">
+        <div class="paint-controls">
+            <input type="color" id="paint-color-picker" value="#22c55e">
+            <input type="range" id="paint-brush-size" min="1" max="50" value="5">
+            <button id="clear-paint-btn">Clear Canvas</button>
+            <button id="close-paint-btn">Close Paint</button>
+        </div>
+        <canvas id="full-paint-canvas"></canvas>
+    </div>
 
     <script type="module" src="src/scripts/main.js"></script>
     <script type="module" src="src/scripts/drag-manager.js"></script>
